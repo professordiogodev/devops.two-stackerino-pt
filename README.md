@@ -5,7 +5,7 @@ Duas pequenas aplicações que **falam uma com a outra**:
 | Pasta       | O que é      | Linguagem       | Porta por omissão | Fala…                           |
 | ----------- | ------------ | --------------- | ----------------- | ------------------------------- |
 | `frontend/` | **Frontend** | Node.js/Express | `3000`            | HTML (páginas para humanos) 👀  |
-| `backend/`  | **Backend**  | Python/Flask    | `5000`            | JSON (dados para programas) 🤖  |
+| `backend/`  | **Backend**  | Python/Flask    | `6000`            | JSON (dados para programas) 🤖  |
 
 Já sabes pôr a correr **uma** aplicação (noderino / flaskerino). Agora vais pôr **duas** aplicações a trabalhar em conjunto. É a isto que se chama **microsserviços**.
 
@@ -32,7 +32,7 @@ Neste projeto:
 ```
   ┌──────────┐   1. GET /          ┌────────────┐  2. GET /api/fact   ┌───────────┐
   │ Browser  │ ──────────────────► │  FRONTEND  │ ──────────────────► │  BACKEND  │
-  │   (tu)   │ ◄────────────────── │  :3000     │ ◄────────────────── │  :5000    │
+  │   (tu)   │ ◄────────────────── │  :3000     │ ◄────────────────── │  :6000    │
   └──────────┘   4. Página HTML    └────────────┘  3. Dados JSON      └───────────┘
 ```
 
@@ -43,10 +43,10 @@ Neste projeto:
 
 | Aplicação | Variável      | Para que serve                                          | Por omissão             |
 | --------- | ------------- | ------------------------------------------------------- | ----------------------- |
-| backend   | `PORT`        | Porta onde o backend fica à escuta                      | `5000`                  |
+| backend   | `PORT`        | Porta onde o backend fica à escuta                      | `6000`                  |
 | backend   | `NUMBER`      | Um número mostrado na página (para distinguir backends) | `0`                     |
 | frontend  | `PORT`        | Porta onde o frontend fica à escuta                     | `3000`                  |
-| frontend  | `BACKEND_URL` | **Onde é que o frontend encontra o backend**            | `http://localhost:5000` |
+| frontend  | `BACKEND_URL` | **Onde é que o frontend encontra o backend**            | `http://localhost:6000` |
 
 As duas aplicações também têm `/healthcheck`.
 
@@ -76,7 +76,7 @@ python3 app.py
 ```
 
 > [!TIP]
-> ✅ Testa — abre http://localhost:5000/api/fact no browser. Deves ver **JSON** (feio, dados em bruto). É normal: um backend produz dados, não páginas.
+> ✅ Testa — abre http://localhost:6000/api/fact no browser. Deves ver **JSON** (feio, dados em bruto). É normal: um backend produz dados, não páginas.
 
 > [!WARNING]
 > Deixa este terminal **a correr**! Se o fechares ou carregares em `Ctrl + C`, o backend para.
@@ -91,7 +91,7 @@ cd devops.two-stackerino-pt/frontend
 # (Só em Ubuntu, se ainda não tiveres) sudo apt update && sudo apt install nodejs npm -y
 npm install
 
-export BACKEND_URL=http://localhost:5000
+export BACKEND_URL=http://localhost:6000
 node index.js
 ```
 
@@ -120,7 +120,7 @@ Para as duas aplicações (`Ctrl + C` em cada terminal) antes do Nível 2.
 O mundo real: o frontend numa máquina, o backend noutra. Precisas de **2 VMs Linux** (ex.: 2 instâncias EC2 na mesma VPC/rede).
 
 ```
-Internet ──► [ VM-FRONTEND : 3000 ]  ──IP privado──►  [ VM-BACKEND : 5000 ]
+Internet ──► [ VM-FRONTEND : 3000 ]  ──IP privado──►  [ VM-BACKEND : 6000 ]
              (pública, aberta a todos)                (só o frontend pode entrar)
 ```
 
@@ -147,7 +147,7 @@ cd devops.two-stackerino-pt/frontend
 npm install
 
 # Usa aqui o IP PRIVADO do BACKEND 👇
-export BACKEND_URL=http://172.31.10.20:5000
+export BACKEND_URL=http://172.31.10.20:6000
 node index.js
 ```
 
@@ -159,22 +159,22 @@ node index.js
 | VM           | Permitir entrada na porta | A partir de                                                    |
 | ------------ | ------------------------- | -------------------------------------------------------------- |
 | VM-FRONTEND  | `3000`                    | Qualquer lado (`0.0.0.0/0`)                                    |
-| VM-BACKEND   | `5000`                    | **Apenas** a VM-FRONTEND (o IP privado dela ou o security group) |
+| VM-BACKEND   | `6000`                    | **Apenas** a VM-FRONTEND (o IP privado dela ou o security group) |
 
 > [!CAUTION]
-> **Não** abras a porta `5000` do backend a `0.0.0.0/0`. O backend nunca deve estar acessível a partir da internet — apenas a partir do frontend.
+> **Não** abras a porta `6000` do backend a `0.0.0.0/0`. O backend nunca deve estar acessível a partir da internet — apenas a partir do frontend.
 
 Abre `http://<IP-PÚBLICO-DO-FRONTEND>:3000` ✅ — "backend número **2**".
 
-Agora experimenta `http://<IP-PÚBLICO-DO-BACKEND>:5000/api/fact` no browser → **não** funciona. Isso é uma **funcionalidade**: só o frontend está aberto ao mundo. Os clientes falam com o empregado de mesa, nunca com a cozinha. 🍝
+Agora experimenta `http://<IP-PÚBLICO-DO-BACKEND>:6000/api/fact` no browser → **não** funciona. Isso é uma **funcionalidade**: só o frontend está aberto ao mundo. Os clientes falam com o empregado de mesa, nunca com a cozinha. 🍝
 
 > [!NOTE]
-> No Nível 1, o `BACKEND_URL` era `http://localhost:5000` porque as duas aplicações estavam na **mesma** máquina. Agora estão em máquinas **diferentes**, por isso `localhost` estaria errado — a VM do frontend iria procurar o backend *em si própria*. Mesmo código, `BACKEND_URL` diferente. É por isso que é uma variável de ambiente!
+> No Nível 1, o `BACKEND_URL` era `http://localhost:6000` porque as duas aplicações estavam na **mesma** máquina. Agora estão em máquinas **diferentes**, por isso `localhost` estaria errado — a VM do frontend iria procurar o backend *em si própria*. Mesmo código, `BACKEND_URL` diferente. É por isso que é uma variável de ambiente!
 
 ### 🩺 Lista de diagnóstico (se vires "o backend não responde")
 
-1. O backend está a correr? Na VM-BACKEND: `curl localhost:5000/healthcheck`
-2. A VM do frontend consegue chegar lá? Na VM-FRONTEND: `curl http://<IP-PRIVADO-DO-BACKEND>:5000/healthcheck`
+1. O backend está a correr? Na VM-BACKEND: `curl localhost:6000/healthcheck`
+2. A VM do frontend consegue chegar lá? Na VM-FRONTEND: `curl http://<IP-PRIVADO-DO-BACKEND>:6000/healthcheck`
    - Fica pendurado / dá timeout → firewall / security group 🔐
    - "Connection refused" → o backend não está a correr, ou a porta está errada
 3. O `BACKEND_URL` está correto? O frontend mostra-o quando arranca.
